@@ -1,216 +1,180 @@
-# Disk Cleanup Tool for Windows 🧹
+# Disk Cleanup Tool v2.0 🧹
 
-Herramienta completa para análisis, limpieza y mantenimiento automático del disco C: en Windows.
+Herramienta avanzada para análisis, limpieza y mantenimiento automático del disco C: en Windows, con interfaz UX profesional y 3 niveles de experiencia.
 
 ## 📁 Estructura del Proyecto
 
 ```
 C:\DiskCleanupTool\
-├── Analyze-Disk.ps1          # Análisis de uso de espacio
-├── Clean-Disk.ps1            # Limpieza interactiva
-├── Maintenance.ps1           # Mantenimiento automático diario
+├── DiskCleanup-Tool.ps1      # Script principal unificado
+├── Modules\
+│   ├── DiskAnalysis.psm1     # Funciones de análisis
+│   ├── DiskCleanup.psm1      # Funciones de limpieza
+│   ├── UI-Advanced.psm1      # Sistema de UI/UX
+│   └── Config.psm1           # Gestión de configuración
+├── Config\
+│   └── settings.json         # Configuración persistente
+├── Analyze-Disk.ps1          # (Legacy) Análisis básico
+├── Clean-Disk.ps1            # (Legacy) Limpieza interactiva
+├── Maintenance.ps1           # (Legacy) Mantenimiento automático
 ├── Setup-ScheduledTask.bat   # Configurador de tarea programada
 └── README.md                 # Esta documentación
 ```
+
+## 🎨 Niveles de UX (Focus Levels)
+
+### 🟢 NIVEL BÁSICO — "Solo quiero liberar espacio"
+Ideal para usuarios casuales. Opciones simples:
+- **[L]** Limpieza rápida automática
+- **[V]** Ver análisis detallado
+- **[M]** Cambiar modo
+
+### 🟡 NIVEL INTERMEDIO — "Quiero control"
+Para usuarios que desean personalizar:
+- Resumen visual con barras de progreso
+- Indicador de seguridad por categoría
+- Limpieza personalizada (selección múltiple)
+- Análisis detallado + reporte HTML
+
+### 🔴 NIVEL AVANZADO — "Control total"
+Para usuarios técnicos:
+- Tabla completa con todas las categorías
+- Selección múltiple por número o rango
+- Comandos abreviados ([A], [C], [E], [S], [D], [X])
+- Escaneo personalizado de rutas
+- Exportación de reportes
 
 ## 🚀 Instalación Rápida
 
 1. **Copia la carpeta** a tu Windows (ej: `C:\DiskCleanupTool\`)
 
-2. **Ejecuta el configurador** como Administrador:
+2. **Ejecuta el script principal:**
+   ```powershell
+   .\DiskCleanup-Tool.ps1
+   ```
+
+3. **Primera ejecución:** Te preguntará qué nivel prefieres (Básico/Intermedio/Avanzado)
+
+4. **Configura tarea programada** (opcional):
    ```
    Clic derecho en Setup-ScheduledTask.bat → Ejecutar como administrador
    ```
 
-3. **¡Listo!** La tarea programada se ejecutará automáticamente cada día a las 3:00 AM.
+## 📊 Uso del Script Principal
 
-## 📊 Uso de los Scripts
-
-### 1. Analyze-Disk.ps1 — Análisis de Disco
-
-Genera un reporte detallado del uso de espacio en disco C:.
-
-**Ejecución:**
+### Modo Interactivo (por defecto)
 ```powershell
-.\Analyze-Disk.ps1
+.\DiskCleanup-Tool.ps1
 ```
+Muestra el menú según tu nivel de experiencia guardado.
 
-**Parámetros opcionales:**
+### Modo Auto (limpieza automática)
 ```powershell
-.\Analyze-Disk.ps1 -TopFolders 30          # Mostrar top 30 carpetas
-.\Analyze-Disk.ps1 -LargeFileThresholdMB 50 # Archivos > 50MB
+.\DiskCleanup-Tool.ps1 -Auto
 ```
+Ejecuta limpieza de categorías seguras sin interacción.
 
-**Salida:**
-- Reporte HTML interactivo en `C:\DiskCleanup\Reports\`
-- Archivo CSV con categorías limpiables
-- Resumen en consola con barras de progreso
-
-**Qué analiza:**
-- ✅ Espacio total, usado y libre del disco
-- ✅ Categorías de archivos limpiables (temporales, caché, logs)
-- ✅ Top 20 carpetas más grandes
-- ✅ Archivos grandes (>100MB)
-- ✅ Caché de navegadores (Chrome, Edge, Firefox)
-
----
-
-### 2. Clean-Disk.ps1 — Limpieza Interactiva
-
-Permite seleccionar qué categorías limpiar de forma interactiva.
-
-**Ejecución:**
+### Modo Silencioso (para scripting)
 ```powershell
-.\Clean-Disk.ps1                    # Modo interactivo
-.\Clean-Disk.ps1 -Auto              # Modo automático (solo categorías seguras)
+.\DiskCleanup-Tool.ps1 -Auto -Silent
 ```
+Limpieza automática sin salida visible (para tareas programadas).
 
-**Categorías disponibles:**
-| # | Categoría | Seguro para Auto |
-|---|-----------|------------------|
-| 1 | 🗑️ Temporales de usuario (>7 días) | ✅ |
-| 2 | 🗑️ Temporales de Windows (>7 días) | ✅ |
-| 3 | 🌐 Caché de Chrome | ✅ |
-| 4 | 🌐 Caché de Edge | ✅ |
-| 5 | 🌐 Caché de Firefox | ✅ |
-| 6 | 📥 Descargas (>30 días) | ❌ |
-| 7 | 🗑️ Papelera de reciclaje | ✅ |
-| 8 | 📋 Logs antiguos (>7 días) | ✅ |
-| 9 | 🔄 Caché Windows Update | ✅ |
-| 10 | 📊 Informes de errores (WER) | ✅ |
-| 11 | ⚡ Prefetch (>30 días) | ✅ |
-
-**Opción 99:** Limpia todas las categorías seguras de una vez.
-
-**Seguridad:**
-- ⚠️ Las descargas **NUNCA** se eliminan automáticamente
-- 📝 Genera log de todo lo eliminado en `C:\DiskCleanup\Logs\`
-- 🔄 Los archivos eliminados van a la Papelera de Reciclaje
-
----
-
-### 3. Maintenance.ps1 — Mantenimiento Diario Automático
-
-Script optimizado para ejecución automática como tarea programada.
-
-**Ejecución manual:**
+### Modo específico
 ```powershell
-.\Maintenance.ps1
-.\Maintenance.ps1 -AlertThresholdPercent 15  # Alertar si < 15% libre
+.\DiskCleanup-Tool.ps1 -Mode 1   # Forzar modo Básico
+.\DiskCleanup-Tool.ps1 -Mode 2   # Forzar modo Intermedio
+.\DiskCleanup-Tool.ps1 -Mode 3   # Forzar modo Avanzado
 ```
 
-**Funcionalidades:**
-- 🧹 Limpia todas las categorías seguras automáticamente
-- 📊 Genera reporte diario en `C:\DiskCleanup\Logs\`
-- 🔄 Rotación automática de logs (mantiene 30 días)
-- ⚠️ Alerta si el espacio libre es crítico (< 10%)
-- 📝 Escribe evento en Windows Event Log si hay alerta
+## 🧹 Categorías Limpiables (14)
 
-**NO elimina:**
-- ❌ Descargas del usuario
-- ❌ Documentos del usuario
-- ❌ Archivos de aplicaciones
-- ❌ Archivos del sistema críticos
+| # | Categoría | Seguro | Edad mín. |
+|---|-----------|--------|-----------|
+| 1 | Temporales usuario | ✅ | 7 días |
+| 2 | Temporales Windows | ✅ | 7 días |
+| 3 | Prefetch | ✅ | 30 días |
+| 4 | Caché Windows Update | ✅ | Any |
+| 5 | Papelera reciclaje | ✅ | Any |
+| 6 | Logs Windows | ✅ | 7 días |
+| 7 | Reportes WER | ✅ | 7 días |
+| 8 | Descargas | ⚠️ | 30 días |
+| 9 | Chrome Cache | ✅ | Any |
+| 10 | Chrome Code Cache | ✅ | Any |
+| 11 | Chrome GPU Cache | ✅ | Any |
+| 12 | Firefox Cache | ✅ | Any |
+| 13 | Edge Cache | ✅ | Any |
+| 14 | Edge Code Cache | ✅ | Any |
 
----
+## ⌨️ Atajos de Teclado
 
-### 4. Setup-ScheduledTask.bat — Configurador
+| Tecla | Acción |
+|-------|--------|
+| [H] | Ayuda |
+| [M] | Cambiar modo |
+| [Q] | Salir |
+| [R] | Refrescar |
+| [0] | Volver/Salir |
 
-Crea la tarea programada en Windows para ejecución automática.
+## ⚙️ Configuración
 
-**Ejecución:**
+El archivo `Config\settings.json` guarda tus preferencias:
+
+```json
+{
+  "UserMode": 2,
+  "LogPath": "C:\\DiskCleanup\\Logs",
+  "ReportPath": "C:\\DiskCleanup\\Reports",
+  "AlertThresholdPercent": 10,
+  "AutoConfirmSafe": false,
+  "LastRun": "2026-03-24 22:00:00",
+  "TotalCleanedGB": 15.5
+}
 ```
-Clic derecho → Ejecutar como administrador
-```
-
-**Qué hace:**
-1. Verifica permisos de administrador
-2. Configura política de ejecución de PowerShell
-3. Crea carpetas de trabajo en `C:\DiskCleanup\`
-4. Crea tarea programada "DailyDiskMaintenance"
-5. Opcionalmente ejecuta el mantenimiento inmediatamente
-
-**Configuración de la tarea:**
-- Nombre: `DailyDiskMaintenance`
-- Frecuencia: Diaria
-- Hora: 03:00 AM
-- Ejecuta como: SYSTEM
-- Privilegios: Highest
-
----
 
 ## 📂 Estructura de Datos Generados
 
 ```
 C:\DiskCleanup\
+├── Config\
+│   └── settings.json              # Preferencias del usuario
 ├── Logs\
-│   ├── maintenance-2026-03-24_03-00-00.txt    # Log detallado
-│   ├── maintenance-summary-2026-03-24.txt     # Resumen diario
-│   ├── cleanup-2026-03-24_10-30-00.txt        # Log de limpieza manual
-│   └── ...                                    # Rotación automática (30 días)
-├── Reports\
-│   ├── disk-analysis-2026-03-24_10-00-00.html # Reporte interactivo
-│   └── cleanable-categories-2026-03-24.csv    # Datos CSV
+│   ├── cleanup-2026-03-24_10-30-00.txt
+│   └── ...                        # Rotación automática (30 días)
+└── Reports\
+    └── disk-analysis-*.html       # Reportes generados
 ```
 
 ## 🔧 Comandos Útiles
 
-### Verificar tarea programada
-```cmd
-schtasks /query /tn "DailyDiskMaintenance"
-```
-
-### Ejecutar mantenimiento manualmente
-```cmd
-schtasks /run /tn "DailyDiskMaintenance"
-```
-
-### Eliminar tarea programada
-```cmd
-schtasks /delete /tn "DailyDiskMaintenance" /f
-```
-
-### Ver logs recientes
+### Ejecutar limpieza automática
 ```powershell
-Get-Content "C:\DiskCleanup\Logs\maintenance-*.txt" -Tail 50
+.\DiskCleanup-Tool.ps1 -Auto
 ```
 
-### Ejecutar análisis desde PowerShell
+### Ejecutar como tarea programada
+```cmd
+powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File "C:\DiskCleanupTool\DiskCleanup-Tool.ps1" -Auto -Silent
+```
+
+### Ver configuración actual
 ```powershell
-Set-Location C:\DiskCleanupTool
-.\Analyze-Disk.ps1
+Import-Module .\Modules\Config.psm1
+Load-Config | ConvertTo-Json
 ```
 
-## ⚙️ Personalización
-
-### Cambiar hora de ejecución
-Edita `Setup-ScheduledTask.bat` y cambia la línea:
-```batch
-/st 03:00
-```
-Por tu hora preferida (formato 24h).
-
-### Cambiar umbral de alerta
-Edita `Maintenance.ps1` y cambia:
+### Resetear configuración
 ```powershell
-[int]$AlertThresholdPercent = 10
+Remove-Item "C:\DiskCleanup\Config\settings.json" -Force
 ```
-Por tu porcentaje preferido (ej: 15 para alertar al 15%).
-
-### Agregar categorías de limpieza
-Edita el array `$CleanupCategories` en `Clean-Disk.ps1` o `$cleanupTasks` en `Maintenance.ps1`.
-
-### Excluir carpetas de limpieza
-Agrega las rutas que quieras proteger al inicio de los scripts.
 
 ## 🛡️ Medidas de Seguridad
 
-1. **Nunca elimina archivos del usuario** sin confirmación explícita
-2. **Modo interactivo** muestra espacio estimado antes de limpiar
-3. **Logs completos** de todo lo eliminado
-4. **Papelera de reciclaje** como respaldo (puedes restaurar)
-5. **Excluye carpetas críticas**: System32, Program Files, Documents
-6. **Archivos en uso** se omiten automáticamente
+1. **Confirmación explícita** para categorías no seguras
+2. **Logs completos** de todas las operaciones
+3. **Archivos a Papelera** (restaurables)
+4. **Exclusión de carpetas críticas** del sistema
+5. **Rotación de logs** (30 días)
 
 ## ❓ Solución de Problemas
 
@@ -219,28 +183,22 @@ Agrega las rutas que quieras proteger al inicio de los scripts.
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-### "Acceso denegado" al ejecutar
-Ejecutar como Administrador (clic derecho → Ejecutar como administrador).
+### "Error cargando módulos"
+Verifica que la carpeta `Modules\` exista y contenga los 4 archivos `.psm1`.
 
-### La tarea programada no se ejecuta
-```cmd
-schtasks /query /tn "DailyDiskMaintenance" /v /fo list
-```
-Verificar estado y última ejecución.
+### La configuración no se guarda
+Verifica permisos de escritura en `C:\DiskCleanup\Config\`.
 
-### Los logs muestran errores de "archivo en uso"
+### Los logs muestran "archivo en uso"
 Es normal. Algunos archivos están siendo usados por el sistema. Se omiten automáticamente.
-
-### Quiero restaurar archivos eliminados
-Revisa la **Papelera de Reciclaje** de Windows. Los archivos eliminados van ahí primero.
 
 ## 📝 Notas Técnicas
 
 - **Requiere:** PowerShell 5.1+ (incluido en Windows 10/11)
 - **Compatibilidad:** Windows 10, Windows 11
-- **Privilegios:** Administrador para Setup y Windows Update cache
-- **Logs:** Se mantienen 30 días por defecto
-- **Rendimiento:** El análisis puede tardar 2-10 minutos dependiendo del tamaño del disco
+- **Privilegios:** Administrador para Windows Update cache
+- **Logs:** Rotación automática cada 30 días
+- **Configuración:** Persiste entre sesiones en `settings.json`
 
 ## 📄 Licencia
 
@@ -248,4 +206,6 @@ Herramienta creada para uso personal. Sin restricciones de uso.
 
 ---
 
-**Última actualización:** Marzo 2026
+**Versión:** 2.0  
+**Última actualización:** Marzo 2026  
+**Repositorio:** https://github.com/tanobuffone/windows-disk-cleanup
